@@ -1,0 +1,31 @@
+---
+ - hosts: [group1]
+   become: yes
+   tasks:
+    
+   - name: Install Chrony
+     apt: name=chrony state=present
+
+   - name: Delete default NTP servers
+     lineinfile:
+      path: /etc/chrony/chrony.conf
+      regexp: 'iburst'
+      state: absent
+
+   - name: Add NTP servers
+     blockinfile:
+      path: /etc/chrony/chrony.conf
+      insertafter: '# information about'
+      block: |
+        server 1 iburst
+        server 2 iburst
+        server 2 iburst
+      
+   - name: Set timezone to Asia/Vladivostok
+     timezone:
+      name: Asia/Vladivostok
+
+   - name: Ensure NTP service is running
+     service: name=chronyd state=restarted enabled=yes  
+
+

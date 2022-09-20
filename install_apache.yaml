@@ -1,0 +1,54 @@
+---
+- name: Install Apache and upload web page
+  hosts: all
+  become: yes
+
+  vars:
+   src_file: /home/user/index.html
+   dest_file: /var/www/html
+
+  tasks:
+  - name: Check Linux version
+    debug: var=ansible_os_family 
+
+  - block:       #=====Block for Astra=====
+    
+    - name: Install Apache for Astra
+      apt: name=apache2 state=latest
+
+    - name: Astra mode off
+      replace:
+       dest: /etc/apache2/apache2.conf
+       regexp: '^#(.*AstraMode*.)'
+       replace: '\1'
+    
+    - name: Copy web page
+      copy: src={{ src_file }} dest={{ dest_file }} mode=0555
+      notify: Restart Apache
+
+    - name: Start web server for Astra
+      service: name=apache2 state=started enabled=yes
+    
+    when: ansible_os_family == "Astra Linux"
+
+  - block:       #=====Block for RedHat=====
+    
+    - name: Install Apache fo RedHat
+      yum: name=httpd state=latest   
+   
+    - name: Copy web page
+      copy: src={{ src_file }} dest={{ dest_file }} mode=0555
+      notify: Restart httpd
+
+    - name: Start web server fo RedHat
+      service: name=httpd state=started enabled=yes
+
+    when: ansible_os_family == "RedHat"
+
+  handlers:
+  - name: Restart Apache
+    service: name=apache2 state=restarted
+
+  - name: Restart httpd
+    service: name=httpd state=restarted
+

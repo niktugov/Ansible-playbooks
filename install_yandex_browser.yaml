@@ -1,0 +1,20 @@
+---
+ - hosts: [test]
+   become: yes
+   tasks:
+     - name: Copy yandex repo
+       apt_repository:
+               repo: deb [arch=amd64] http://repo.yandex.ru/yandex-browser/deb stable main
+               state: present
+
+     - name: Download and install gpg-key
+       shell: wget --no-check-certificate -qO - https://repo.yandex.ru/yandex-browser/YANDEX-BROWSER-KEY.GPG | sudo apt-key add -
+       args:
+         warn: False
+       environment:
+                http_proxy: http://proxy:3128
+                https_proxy: https://proxy:3128
+
+     - name: Install yandex-browser
+       apt: name=yandex-browser-stable state=present
+       
